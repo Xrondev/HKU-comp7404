@@ -119,10 +119,6 @@ def initialize_population(population_size: int, c_constraint=(1, 1000), sigma_co
     return population
 
 
-def update_positions(population: np.ndarray, population_best: np.ndarray, b: float):
-    return NotImplementedError
-
-
 def apply_constraint(whale, c_constraint=(1, 1000), sigma_constraint=(1, 100)) -> np.ndarray:
     """
     Apply the constraints to the whale
@@ -144,8 +140,8 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
     :param partition: dataset partition
     :param population: whales population
     :param max_iteration: maximum number of iterations
-    :param b: variable used in Eq.2: linearly decreases from 2 (by default =2) to 0
-    :param a: *Not mentioned default value in the paper* constant to determine the spiral shape.
+    :param a: variable used in Eq.2: linearly decreases from 2 (by default =2) to 0
+    :param b: *Not mentioned default value in the paper* constant to determine the spiral shape.
     :return:
     """
     a_step = a / max_iteration
