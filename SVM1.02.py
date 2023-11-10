@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-wbcd_dataset = pd.read_csv('C:/Users/Administrator/Desktop/cs project/7404(machine learning)/group work/wbcd.data', header=None)
+wbcd_dataset = pd.read_csv('./dataset/wbcd.data', header=None)
 random_state = 0
 
 #print(wbcd_dataset.head(),wdbc_dataset.head())

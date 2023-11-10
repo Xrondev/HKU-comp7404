@@ -1,6 +1,6 @@
 import pandas as pd
-random_state = 0
 
+random_state = 0
 
 wbcd_dataset = pd.read_csv('./dataset/wbcd.data', header=None)
 wdbc_dataset = pd.read_csv('./dataset/wdbc.data', header=None)
@@ -64,3 +64,43 @@ for key, val in wbcd_partitioned.items():
         show_wbcd_statistic_data(val['train'])
         print('Test set')
         show_wbcd_statistic_data(val['test'])
+
+# -------------------------------------------------------
+# WDBC dataset
+wdbc_dataset = wdbc_dataset.drop(0, axis=1)  # drop the id column
+wdbc_dataset.iloc[:, 0] = wdbc_dataset.iloc[:, 0].replace('M', 2)
+wdbc_dataset.iloc[:, 0] = wdbc_dataset.iloc[:, 0].replace('B', 4)
+
+# Moving the 1st column (ground truth label) to the last
+cols = list(wdbc_dataset.columns)
+cols = cols[1:] + cols[:1]
+wdbc_dataset = wdbc_dataset[cols]
+wdbc_dataset[cols[-1]] = wdbc_dataset[cols[-1]].astype(int)
+
+# wdbc partitioning
+# 50-50
+train_50 = wdbc_dataset.sample(frac=0.5, random_state=random_state)
+test_50 = wdbc_dataset.drop(train_50.index)
+# 60-40
+train_60 = wdbc_dataset.sample(frac=0.6, random_state=random_state)
+test_60 = wdbc_dataset.drop(train_60.index)
+# 10-CV
+train_10cv = wdbc_dataset.copy()
+test_10cv = []
+for i in range(10):
+    test_10cv.append(train_10cv.sample(frac=0.1, random_state=(random_state + i)))
+
+wdbc_partitioned = {
+    '50-50': {
+        'train': train_50,
+        'test': test_50
+    },
+    '60-40': {
+        'train': train_60,
+        'test': test_60
+    },
+    '10-CV': {
+        'train': train_10cv,
+        'test': test_10cv
+    }
+}

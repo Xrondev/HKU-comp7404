@@ -1,9 +1,9 @@
-import numpy as np
-import pandas as pd
 import random
 
-wbcd_dataset = pd.read_csv('C:/Users/Administrator/Desktop/cs project/7404(machine learning)/group work/wbcd.data',
-                           header=None)
+import numpy as np
+import pandas as pd
+
+wbcd_dataset = pd.read_csv('../dataset/wbcd.data', header=None)
 random_state = 0
 
 # print(wbcd_dataset.head(),wdbc_dataset.head())
@@ -49,13 +49,10 @@ wbcd_partitioned = {
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score
 
-
-
 ############################################################################
 
 # Required Libraries
 
-import os
 from scipy.special import gamma
 
 
@@ -87,12 +84,12 @@ def svm_function(c=None, sigma=None):
 ############################################################################
 
 # Function: Initialize Variables
-def initial_variables(size=5, min_values=[1,1], max_values=[1000, 100], target_function=svm_function):
+def initial_variables(size=5, min_values=[1, 1], max_values=[1000, 100], target_function=svm_function):
     position = np.zeros((size, len(min_values) + 1))
     for i in range(0, size):
         for j in range(0, len(min_values)):
             position[i, j] = random.uniform(min_values[j], max_values[j])
-        position[i, -1] = target_function(position[i,0],position[i,1])
+        position[i, -1] = target_function(position[i, 0], position[i, 1])
     return position
 
 
@@ -106,11 +103,16 @@ def euclidean_distance(x, y):
     return distance ** (1 / 2)
 
 
+from config import random_state
+
+rng = np.random.default_rng(random_state)
+
+
 # Function: Levy Distribution
 def levy_flight(beta=1.5):
     beta = beta
-    r1 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-    r2 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
+    r1 = rng.random()
+    r2 = rng.random()
     sig_num = gamma(1 + beta) * np.sin((np.pi * beta) / 2.0)
     sig_den = gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2)
     sigma = (sig_num / sig_den) ** (1 / beta)
@@ -151,7 +153,7 @@ def separation_alignment_cohesion(dragonflies, radius, dragon=0):
 
 
 # Function: Update Food
-def update_food(dragonflies, radius, food_position, min_values=[1,1], max_values=[1000,100], dragon=0,
+def update_food(dragonflies, radius, food_position, min_values=[1, 1], max_values=[1000, 100], dragon=0,
                 target_function=svm_function):
     dimensions = 0
     i = dragon
@@ -171,7 +173,7 @@ def update_food(dragonflies, radius, food_position, min_values=[1,1], max_values
 
 
 # Function: Update Predator
-def update_predator(dragonflies, radius, predator, min_values=[1,-1], max_values=[1000,100], dragon=0,
+def update_predator(dragonflies, radius, predator, min_values=[1, -1], max_values=[1000, 100], dragon=0,
                     target_function=svm_function):
     dimensions = 0
     i = dragon
@@ -193,10 +195,10 @@ def update_predator(dragonflies, radius, predator, min_values=[1,-1], max_values
 # Function: Update Search Matrices
 def update_da(adjustment_const, weight_inertia, delta_max, dragonflies, best_dragon, radius, food_position, predator,
               delta_flies, min_values, max_values, target_function):
-    rand1 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-    rand2 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-    rand3 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-    rand4 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
+    rand1 = rng.random()
+    rand2 = rng.random()
+    rand3 = rng.random()
+    rand4 = rng.random()
     weight_separation = 2 * rand1 * adjustment_const  # Seperation Weight
     weight_alignment = 2 * rand2 * adjustment_const  # Alignment Weight
     weight_cohesion = 2 * rand3 * adjustment_const  # Cohesion Weight
@@ -210,9 +212,9 @@ def update_da(adjustment_const, weight_inertia, delta_max, dragonflies, best_dra
         if (dimensions > 0):
             if (neighbours >= 1):
                 for j in range(0, len(min_values)):
-                    r1 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-                    r2 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
-                    r3 = int.from_bytes(os.urandom(8), byteorder='big') / ((1 << 64) - 1)
+                    r1 = rng.random()
+                    r2 = rng.random()
+                    r3 = rng.random()
                     delta_flies[i, j] = np.clip(
                         weight_inertia * delta_flies[i, j] + r1 * alignment[0, j] + r2 * cohesion[0, j] + r3 *
                         separation[0, j], -delta_max[0, j], delta_max[0, j])
@@ -247,7 +249,8 @@ def update_da(adjustment_const, weight_inertia, delta_max, dragonflies, best_dra
 ############################################################################
 
 # DA Function
-def dragonfly_algorithm(size=10, min_values=[1, 1], max_values=[1000, 100], generations=50, target_function=svm_function,
+def dragonfly_algorithm(size=10, min_values=[1, 1], max_values=[1000, 100], generations=50,
+                        target_function=svm_function,
                         verbose=True):
     radius = np.zeros((1, len(min_values)))
     delta_max = np.zeros((1, len(min_values)))
@@ -258,7 +261,7 @@ def dragonfly_algorithm(size=10, min_values=[1, 1], max_values=[1000, 100], gene
     delta_flies = initial_variables(size, min_values, max_values, target_function)
     predator = initial_variables(1, min_values, max_values, target_function)
     food_position = initial_variables(1, min_values, max_values, target_function)
-    print('dragonflies:','\n', dragonflies)
+    print('dragonflies:', '\n', dragonflies)
     print('delta_flies:', '\n', delta_flies)
     print('predator:', '\n', predator)
     print('food_position:', '\n', food_position)
@@ -274,23 +277,25 @@ def dragonfly_algorithm(size=10, min_values=[1, 1], max_values=[1000, 100], gene
     best_dragon = np.copy(food_position[food_position[:, -1].argsort()][0, :])
     while (count <= generations):
         if (verbose == True):
-            print('Generation: ', count, ' f(x) = ', best_dragon[-1])
+            print('Generation: ', count, ' ACC = ', best_dragon[-1])
         for j in range(0, len(min_values)):
             radius[0, j] = (max_values[j] - min_values[j]) / 4 + (
-                        (max_values[j] - min_values[j]) * (count / generations) * 2)
+                    (max_values[j] - min_values[j]) * (count / generations) * 2)
         weight_inertia = 0.9 - count * ((0.5) / generations)
         adjustment_const = 0.1 - count * ((0.1) / (generations / 2))
         if (adjustment_const < 0):
             adjustment_const = 0
         dragonflies, food_position, predator, delta_flies, best_dragon = \
             update_da(adjustment_const, weight_inertia,
-            delta_max, dragonflies, best_dragon,
-            radius, food_position, predator,
-            delta_flies, min_values, max_values,
-            svm_function)
+                      delta_max, dragonflies, best_dragon,
+                      radius, food_position, predator,
+                      delta_flies, min_values, max_values,
+                      svm_function)
         count = count + 1
     return best_dragon
 
+
 ############################################################################
 
-dragonfly_algorithm()
+a = dragonfly_algorithm(size=10)
+print(a)

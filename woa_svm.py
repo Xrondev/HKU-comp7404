@@ -1,22 +1,10 @@
 import numpy as np
 
+from algo_util import apply_constraint, initialize_population
 from config import random_state
 from svm import basic_svm_fit
 
 rng = np.random.default_rng(random_state)
-
-
-def apply_constraint(whale, c_constraint=(1, 1000), sigma_constraint=(1, 100)) -> np.ndarray:
-    """
-    Apply the constraints to the whale
-    :param whale: ndarray of shape (2,)
-    :param c_constraint: (C_min, C_max), default (1, 1000)
-    :param sigma_constraint: (sigma_min, sigma_max), default (1, 100)
-    :return: ndarray of shape (2,)
-    """
-    whale[0] = np.clip(whale[0], c_constraint[0], c_constraint[1])
-    whale[1] = np.clip(whale[1], sigma_constraint[0], sigma_constraint[1])
-    return whale
 
 
 def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b=0.5):
@@ -32,10 +20,7 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
     a_step = a / max_iteration
     current_iteration = 0
     fitness = np.array([basic_svm_fit(partition, c, sigma)[0] for c, sigma in population])
-    print('fitness', fitness)
     best_whale = population[np.argmax(fitness)]
-    print('best_whale', best_whale)
-    print(np.around(basic_svm_fit(partition, best_whale[0], best_whale[1]), 8))
 
     while current_iteration < max_iteration:
         # using whales C and sigma to train SVMs and calculate the CA as fitness
@@ -49,9 +34,8 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
                     population[idx] = best_whale - A * (C * best_whale - whale)
                 else:
                     # update the position by Eq.5
-                    population[idx] = population[np.random.randint(0, len(population))] - A * (
-                            C * population[np.random.randint(0, len(population))] - whale)
-                    pass
+                    random_whale = population[np.random.randint(0, len(population))]
+                    population[idx] = random_whale - A * (C * random_whale - whale)
             else:
                 # update the position by Eq.4, t>=1
                 l = 2 * rng.random() - 1
@@ -70,33 +54,19 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
     return best_whale
 
 
-def initialize_population(population_size: int, num_classes: int, c_constraint=(1, 1000),
-                          sigma_constraint=(1, 100)) -> np.ndarray:
-    """
-    Initialize the whales population, each whale is represented by a vector of two elements (c, sigma).
-    Both c and sigma are the hyperparameters of SVM.
-    :param num_classes: number of classes in each whale
-    :param population_size: number of whales
-    :param c_constraint: (C_min, C_max), default (1, 1000)
-    :param sigma_constraint: (sigma_min, sigma_max), default (1, 100)
-    :return: ndarray of shape (population_size, 2)
-    """
-    population = np.zeros((population_size, num_classes))
-    for i in range(population_size):
-        population[i][0] = np.random.randint(c_constraint[0], c_constraint[1])
-        population[i][1] = np.random.randint(sigma_constraint[0], sigma_constraint[1])
-    return population
-
-
 def main():
     n = 50  # The population size of whales
     num_classes = 2
 
-    from dataset import wbcd_partitioned
+    from dataset import wbcd_partitioned, wdbc_partitioned
     population = initialize_population(n, num_classes)
-    best_whale = whale_optimization_algorithm(wbcd_partitioned['50-50'], population)
+    best_whale = whale_optimization_algorithm(wbcd_partitioned['50-50'], population, max_iteration=50)
     print(best_whale)
     print(basic_svm_fit(wbcd_partitioned['50-50'], best_whale[0], best_whale[1]))
+    # -----------------
+    best_whale = whale_optimization_algorithm(wdbc_partitioned['50-50'], population, max_iteration=50)
+    print(best_whale)
+    print(basic_svm_fit(wdbc_partitioned['50-50'], best_whale[0], best_whale[1]))
 
 
 if __name__ == '__main__':
