@@ -140,31 +140,17 @@ def main():
     normal_svm_c = rng.random() * 1000
     normal_svm_sigma = rng.random() * 100
     print(f'c: {normal_svm_c}, sigma: {normal_svm_sigma}')
-    normal_svm_baseline_wbcd_50 = basic_svm_fit(wbcd_partitioned['50-50'], normal_svm_c, normal_svm_sigma)
-    normal_svm_baseline_wbcd_60 = basic_svm_fit(wbcd_partitioned['60-40'], normal_svm_c, normal_svm_sigma)
-    normal_svm_baseline_wdbc_50 = basic_svm_fit(wdbc_partitioned['50-50'], normal_svm_c, normal_svm_sigma)
-    normal_svm_baseline_wdbc_60 = basic_svm_fit(wdbc_partitioned['60-40'], normal_svm_c, normal_svm_sigma)
-    print(f'svm wbcd 50-50: {normal_svm_baseline_wbcd_50}')
-    print(f'svm wbcd 60-40: {normal_svm_baseline_wbcd_60}')
-    print(f'svm wdbc 50-50: {normal_svm_baseline_wdbc_50}')
-    print(f'svm wdbc 60-40: {normal_svm_baseline_wdbc_60}')
+    for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
+        for p in ('50-50', '60-40', '10-CV'):
+            normal_svm = basic_svm_fit(d[p], normal_svm_c, normal_svm_sigma)
+            print(f'svm {name} {p}: {normal_svm}')
 
-
-    swarm_wbcd_50 = DragonflySwarm(pop_size, bounds, max_iter, wbcd_partitioned['50-50'])
-    best_position, best_fitness = swarm_wbcd_50.optimize()
-    print(f'wbcd 50-50: {best_position}, {1 - best_fitness}')
-
-    swarm_wbcd_60 = DragonflySwarm(pop_size, bounds, max_iter, wbcd_partitioned['60-40'])
-    best_position, best_fitness = swarm_wbcd_60.optimize()
-    print(f'wbcd 50-50: {best_position}, {1 - best_fitness}')
-
-    swarm_wdbc_50 = DragonflySwarm(pop_size, bounds, max_iter, wdbc_partitioned['50-50'])
-    best_position, best_fitness = swarm_wdbc_50.optimize()
-    print(f'wdbc 50-50: {best_position}, {1 - best_fitness}')
-
-    swarm_wdbc_60 = DragonflySwarm(pop_size, bounds, max_iter, wdbc_partitioned['60-40'])
-    best_position, best_fitness = swarm_wdbc_60.optimize()
-    print(f'wdbc 60-40: {best_position}, {1 - best_fitness}')
+    for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
+        for p in ('50-50', '60-40', '10-CV'):
+            swarm = DragonflySwarm(pop_size, bounds, max_iter, d[p])
+            best_position, best_fitness = swarm.optimize()
+            print(f'{name} {p} best position: {best_position}:{1 - best_fitness}')
+            print(basic_svm_fit(d[p], *best_position))
 
 
 if __name__ == '__main__':

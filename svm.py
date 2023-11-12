@@ -7,7 +7,7 @@ from sklearn.svm import SVC
 from config import random_state
 
 
-def basic_svm_fit(partition: dict | pd.DataFrame, c=None, sigma=None) -> tuple[float, float, float, float]:
+def basic_svm_fit(partition: dict | pd.DataFrame, c=None, sigma=None):
     def _svm(c=None, sigma=None):
         if sigma is not None:
             gamma = 1 / (sigma ** 2)
@@ -42,7 +42,8 @@ def basic_svm_fit(partition: dict | pd.DataFrame, c=None, sigma=None) -> tuple[f
             avg_sensitivity.append(result[1])
             avg_specificity.append(result[2])
             avg_auc.append(result[3])
-        return np.mean(avg_ca), np.mean(avg_sensitivity), np.mean(avg_specificity), np.mean(avg_auc)
+        return np.mean(avg_ca), np.mean(avg_sensitivity), np.mean(avg_specificity), np.mean(avg_auc),\
+            max(avg_ca), max(avg_sensitivity), max(avg_specificity), max(avg_auc)
 
     train = partition['train']
     test = partition['test']
