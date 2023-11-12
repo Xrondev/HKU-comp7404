@@ -1,9 +1,10 @@
 import pandas as pd
-
+import os
 random_state = 0
+working_directory = os.getcwd()
 
-wbcd_dataset = pd.read_csv('./dataset/wbcd.data', header=None)
-wdbc_dataset = pd.read_csv('./dataset/wdbc.data', header=None)
+wbcd_dataset = pd.read_csv(working_directory + './dataset/wbcd.data', header=None)
+wdbc_dataset = pd.read_csv(working_directory + './dataset/wdbc.data', header=None)
 
 # wbcd_dataset
 wbcd_dataset = wbcd_dataset.drop(0, axis=1)  # drop the id column
