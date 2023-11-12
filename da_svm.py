@@ -6,9 +6,11 @@ from config import random_state
 
 rng = np.random.default_rng(random_state)
 
+
 def objective_function(dataset, position):
     # We try minimizing the objective function: in this case, minimize the Error rate
-    return 1-basic_svm_fit(dataset, position[0], position[1])[0]
+    return 1 - basic_svm_fit(dataset, position[0], position[1])[0]
+
 
 class Dragonfly:
     def __init__(self, dim, bounds):
@@ -24,10 +26,11 @@ class Dragonfly:
     def levy_flight(self, beta):
         sigma = (gamma(1 + beta) * np.sin(np.pi * beta / 2) /
                  (gamma((1 + beta) / 2) * beta * 2 ** ((beta - 1) / 2))) ** (1 / beta)
-        u = np.random.normal(0, sigma, size=len(self.position))
-        v = np.random.normal(0, 1, size=len(self.position))
+        u = rng.normal(0, sigma, len(self.position))
+        v = rng.normal(0, 1, len(self.position))
         step = 0.01 * u / (np.abs(v) ** (1 / beta))
         return step
+
 
 class DragonflySwarm:
     def __init__(self, pop_size, bounds, max_iter, dataset):
@@ -61,7 +64,7 @@ class DragonflySwarm:
         self.radius = (self.bounds[:, 1] - self.bounds[:, 0]) / 4 + \
                       ((self.bounds[:, 1] - self.bounds[:, 0]) * (count / self.max_iter) * 2)
 
-    def calculate_distance(self,d1_position, d2_position):
+    def calculate_distance(self, d1_position, d2_position):
         # Calculate the distance between two dragonflies in each dimension
         return np.abs(d1_position - d2_position)
 
@@ -75,7 +78,6 @@ class DragonflySwarm:
             if np.all(distance < self.radius):  # Check if within radius for all dimensions
                 neighbours.append(other)
         return neighbours
-
 
     def optimize(self):
         while self.iter < self.max_iter:
@@ -99,7 +101,8 @@ class DragonflySwarm:
                     # Calculate the behavior using equations provided
                     separation = -np.sum([dragonfly.position - neighbour.position for neighbour in neighbours], axis=0)
                     alignment = np.sum([neighbour.velocity for neighbour in neighbours], axis=0) / len(neighbours)
-                    cohesion = np.sum([neighbour.position for neighbour in neighbours], axis=0) / len(neighbours) - dragonfly.position
+                    cohesion = np.sum([neighbour.position for neighbour in neighbours], axis=0) / len(
+                        neighbours) - dragonfly.position
                     food_attraction = self.food_position - dragonfly.position
                     enemy_distraction = self.enemy_position + dragonfly.position
 
@@ -117,11 +120,12 @@ class DragonflySwarm:
 
             # This is the end of an iteration
             self.iter += 1
-            print(f'Dragonfly population at iteration {self.iter}:{[dragonfly.position for dragonfly in self.dragonflies]}')
-
+            # print(
+            #     f'Dragonfly population at iteration {self.iter}:{[dragonfly.position for dragonfly in self.dragonflies]}')
 
         # At the end of the optimization, you can return the best solution found
         return self.food_position, self.food_fitness
+
 
 # Define min and max values for each dimension
 bounds = np.array([[1, 1000], [1, 100]])  # Example with different ranges for two dimensions
@@ -130,10 +134,38 @@ bounds = np.array([[1, 1000], [1, 100]])  # Example with different ranges for tw
 pop_size = 50  # Population size
 max_iter = 50  # Maximum number of iterations
 
-from dataset import wbcd_partitioned
+def main():
+    from dataset import wbcd_partitioned, wdbc_partitioned
 
-swarm = DragonflySwarm(pop_size, bounds, max_iter, wbcd_partitioned['50-50'])
-best_position, best_fitness = swarm.optimize()
+    normal_svm_c = rng.random() * 1000
+    normal_svm_sigma = rng.random() * 100
+    print(f'c: {normal_svm_c}, sigma: {normal_svm_sigma}')
+    normal_svm_baseline_wbcd_50 = basic_svm_fit(wbcd_partitioned['50-50'], normal_svm_c, normal_svm_sigma)
+    normal_svm_baseline_wbcd_60 = basic_svm_fit(wbcd_partitioned['60-40'], normal_svm_c, normal_svm_sigma)
+    normal_svm_baseline_wdbc_50 = basic_svm_fit(wdbc_partitioned['50-50'], normal_svm_c, normal_svm_sigma)
+    normal_svm_baseline_wdbc_60 = basic_svm_fit(wdbc_partitioned['60-40'], normal_svm_c, normal_svm_sigma)
+    print(f'svm wbcd 50-50: {normal_svm_baseline_wbcd_50}')
+    print(f'svm wbcd 60-40: {normal_svm_baseline_wbcd_60}')
+    print(f'svm wdbc 50-50: {normal_svm_baseline_wdbc_50}')
+    print(f'svm wdbc 60-40: {normal_svm_baseline_wdbc_60}')
 
-print("Best Position:", best_position)
-print("Best Fitness:", 1-best_fitness)
+
+    swarm_wbcd_50 = DragonflySwarm(pop_size, bounds, max_iter, wbcd_partitioned['50-50'])
+    best_position, best_fitness = swarm_wbcd_50.optimize()
+    print(f'wbcd 50-50: {best_position}, {1 - best_fitness}')
+
+    swarm_wbcd_60 = DragonflySwarm(pop_size, bounds, max_iter, wbcd_partitioned['60-40'])
+    best_position, best_fitness = swarm_wbcd_60.optimize()
+    print(f'wbcd 50-50: {best_position}, {1 - best_fitness}')
+
+    swarm_wdbc_50 = DragonflySwarm(pop_size, bounds, max_iter, wdbc_partitioned['50-50'])
+    best_position, best_fitness = swarm_wdbc_50.optimize()
+    print(f'wdbc 50-50: {best_position}, {1 - best_fitness}')
+
+    swarm_wdbc_60 = DragonflySwarm(pop_size, bounds, max_iter, wdbc_partitioned['60-40'])
+    best_position, best_fitness = swarm_wdbc_60.optimize()
+    print(f'wdbc 60-40: {best_position}, {1 - best_fitness}')
+
+
+if __name__ == '__main__':
+    main()

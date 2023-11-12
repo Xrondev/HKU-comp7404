@@ -1,5 +1,8 @@
 import pandas as pd
 import os
+
+from sklearn.model_selection import KFold
+
 random_state = 0
 working_directory = os.getcwd()
 
@@ -26,10 +29,11 @@ test_50 = wbcd_dataset.drop(train_50.index)
 train_60 = wbcd_dataset.sample(frac=0.6, random_state=random_state)
 test_60 = wbcd_dataset.drop(train_60.index)
 # 10-CV
-train_10cv = wbcd_dataset.copy()
-test_10cv = []
-for i in range(10):
-    test_10cv.append(train_10cv.sample(frac=0.1, random_state=(random_state + i)))
+kf = KFold(n_splits=10, shuffle=True, random_state=random_state)
+for train_index, test_index in kf.split(wbcd_dataset):
+    train_10cv = wbcd_dataset.iloc[train_index]
+    test_10cv = wbcd_dataset.iloc[test_index]
+
 
 wbcd_partitioned = {
     '50-50': {
@@ -40,10 +44,7 @@ wbcd_partitioned = {
         'train': train_60,
         'test': test_60
     },
-    '10-CV': {
-        'train': train_10cv,
-        'test': test_10cv
-    }
+    '10-CV': wbcd_dataset.copy()
 }
 
 
@@ -56,9 +57,6 @@ def show_wbcd_statistic_data(dataset) -> None:
 for key, val in wbcd_partitioned.items():
     if key == '10-CV':
         print(f'10-CV')
-        for i in range(10):
-            print(f'fold {i + 1}')
-            show_wbcd_statistic_data(val['test'][i])
     else:
         print(key)
         print('Train set')
@@ -86,11 +84,10 @@ test_50 = wdbc_dataset.drop(train_50.index)
 train_60 = wdbc_dataset.sample(frac=0.6, random_state=random_state)
 test_60 = wdbc_dataset.drop(train_60.index)
 # 10-CV
-train_10cv = wdbc_dataset.copy()
-test_10cv = []
-for i in range(10):
-    test_10cv.append(train_10cv.sample(frac=0.1, random_state=(random_state + i)))
-
+kf = KFold(n_splits=10, shuffle=True, random_state=random_state)
+for train_index, test_index in kf.split(wdbc_dataset):
+    train_10cv = wdbc_dataset.iloc[train_index]
+    test_10cv = wdbc_dataset.iloc[test_index]
 wdbc_partitioned = {
     '50-50': {
         'train': train_50,
@@ -100,8 +97,5 @@ wdbc_partitioned = {
         'train': train_60,
         'test': test_60
     },
-    '10-CV': {
-        'train': train_10cv,
-        'test': test_10cv
-    }
+    '10-CV': wdbc_dataset.copy()
 }

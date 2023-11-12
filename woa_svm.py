@@ -60,9 +60,9 @@ def main():
 
     from dataset import wbcd_partitioned, wdbc_partitioned
     population = initialize_population(n, num_classes)
-    best_whale = whale_optimization_algorithm(wbcd_partitioned['50-50'], population, max_iteration=50)
+    best_whale = whale_optimization_algorithm(wbcd_partitioned['10-CV'], population, max_iteration=50)
     print(best_whale)
-    print(basic_svm_fit(wbcd_partitioned['50-50'], best_whale[0], best_whale[1]))
+    print(basic_svm_fit(wbcd_partitioned['10-CV'], best_whale[0], best_whale[1]))
     # -----------------
     best_whale = whale_optimization_algorithm(wdbc_partitioned['50-50'], population, max_iteration=50)
     print(best_whale)
