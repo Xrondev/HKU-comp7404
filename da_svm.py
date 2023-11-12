@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import gamma
-from dataset import wbcd_partitioned
-from svm import basic_svm_fit
+
 from config import random_state
+from svm import basic_svm_fit
 
 rng = np.random.default_rng(random_state)
 
@@ -133,6 +133,7 @@ bounds = np.array([[1, 1000], [1, 100]])  # Example with different ranges for tw
 # Parameters
 pop_size = 50  # Population size
 max_iter = 50  # Maximum number of iterations
+
 
 def main():
     from dataset import wbcd_partitioned, wdbc_partitioned

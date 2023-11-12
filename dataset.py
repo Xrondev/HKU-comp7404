@@ -1,6 +1,6 @@
-import pandas as pd
 import os
 
+import pandas as pd
 from sklearn.model_selection import KFold
 
 random_state = 0
@@ -33,7 +33,6 @@ kf = KFold(n_splits=10, shuffle=True, random_state=random_state)
 for train_index, test_index in kf.split(wbcd_dataset):
     train_10cv = wbcd_dataset.iloc[train_index]
     test_10cv = wbcd_dataset.iloc[test_index]
-
 
 wbcd_partitioned = {
     '50-50': {

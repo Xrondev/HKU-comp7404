@@ -57,8 +57,14 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
 def main():
     n = 50  # The population size of whales
     num_classes = 2
-
     from dataset import wbcd_partitioned, wdbc_partitioned
+    normal_svm_c = rng.random() * 1000
+    normal_svm_sigma = rng.random() * 100
+    print(f'c: {normal_svm_c}, sigma: {normal_svm_sigma}')
+    for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
+        for p in ('50-50', '60-40', '10-CV'):
+            normal_svm = basic_svm_fit(d[p], normal_svm_c, normal_svm_sigma)
+            print(f'svm {name} {p}: {normal_svm}')
 
     for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
         for p in ('50-50', '60-40', '10-CV'):
