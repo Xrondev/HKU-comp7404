@@ -1,7 +1,9 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 from algo_util import apply_constraint, initialize_population
 from config import random_state
+from dataset import wbcd_partitioned, wdbc_partitioned
 from svm import basic_svm_fit
 
 rng = np.random.default_rng(random_state)
@@ -57,22 +59,49 @@ def whale_optimization_algorithm(partition, population, max_iteration=50, a=2, b
 def main():
     n = 50  # The population size of whales
     num_classes = 2
-    from dataset import wbcd_partitioned, wdbc_partitioned
+    rng = np.random.default_rng()  # Create a random number generator instance
+
     normal_svm_c = rng.random() * 1000
     normal_svm_sigma = rng.random() * 100
     print(f'c: {normal_svm_c}, sigma: {normal_svm_sigma}')
+
+    result_svm = {}
+    result_woa = {}
+
     for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
         for p in ('50-50', '60-40', '10-CV'):
             normal_svm = basic_svm_fit(d[p], normal_svm_c, normal_svm_sigma)
+            result_svm[f'{name}{p}'] = normal_svm
             print(f'svm {name} {p}: {normal_svm}')
 
-    for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
-        for p in ('50-50', '60-40', '10-CV'):
             population = initialize_population(n, num_classes)
             best_whale = whale_optimization_algorithm(d[p], population, max_iteration=50)
+            result_woa[f'{name}{p}'] = basic_svm_fit(d[p], *best_whale)
             print(f'{name} {p} best whale: {best_whale}')
-            print(basic_svm_fit(d[p], best_whale[0], best_whale[1]))
+            print(basic_svm_fit(d[p], *best_whale))
+
+    # Plotting results
+    metrics = ['Accuracy', 'Specificity', 'Sensitivity', 'AUC']
+    for metric_index, metric_name in enumerate(metrics):
+        plot_results(result_svm, result_woa, metric_name, metric_index)
 
 
-if __name__ == '__main__':
+def plot_results(result_svm, result_woa, metric_name, metric_index):
+    plt.figure(figsize=(16, 10))
+    plt.title(f'{metric_name} comparison between WOA and SVM')
+    plt.xlabel('Dataset')
+    plt.ylabel(metric_name)
+
+    for idx, (name, d) in enumerate({'SVM': result_svm, 'WOA': result_woa}.items()):
+        plt.bar(np.arange(len(d)) + idx * 0.2, [v[metric_index] for v in d.values()], width=0.2, label=name)
+
+    plt.xticks(np.arange(len(d)) + 0.1, d.keys())
+    plt.yticks(np.arange(0.80, 1.00, 0.01))
+    plt.ylim(0.80, 1.00)
+    plt.legend()
+
+    plt.show()
+
+
+if __name__ == "__main__":
     main()

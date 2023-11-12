@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from scipy.special import gamma
 
 from config import random_state
@@ -50,8 +51,6 @@ class DragonflySwarm:
         self.enemy_position = np.zeros(len(bounds))
 
     def update_parameters(self):
-        # Here you could update w, s, a, c, f, and e based on iteration or other logic
-        # For demonstration purposes, we'll use fixed values for these weights
         self.w = 0.5  # Inertia weight
         self.s = 0.2  # Separation weight
         self.a = 0.2  # Alignment weight
@@ -141,18 +140,39 @@ def main():
     normal_svm_c = rng.random() * 1000
     normal_svm_sigma = rng.random() * 100
     print(f'c: {normal_svm_c}, sigma: {normal_svm_sigma}')
+
+    result_svm = {}
+    result_woa = {}
     for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
         for p in ('50-50', '60-40', '10-CV'):
             normal_svm = basic_svm_fit(d[p], normal_svm_c, normal_svm_sigma)
             print(f'svm {name} {p}: {normal_svm}')
-
-    for name, d in {'wbcd': wbcd_partitioned, 'wdbc': wdbc_partitioned}.items():
-        for p in ('50-50', '60-40', '10-CV'):
+            result_svm[f'{name}{p}'] = normal_svm
             swarm = DragonflySwarm(pop_size, bounds, max_iter, d[p])
             best_position, best_fitness = swarm.optimize()
+            result_woa[f'{name}{p}'] = basic_svm_fit(d[p], *best_position)
             print(f'{name} {p} best position: {best_position}:{1 - best_fitness}')
             print(basic_svm_fit(d[p], *best_position))
 
+    metrics = ['Accuracy', 'Specificity', 'Sensitivity', 'AUC']
+    for metric_index, metric_name in enumerate(metrics):
+        plot_results(result_svm, result_woa, metric_name, metric_index)
+
+def plot_results(result_svm, result_woa, metric_name, metric_index):
+    plt.figure(figsize=(16, 10))
+    plt.title(f'{metric_name} comparison between WOA and SVM')
+    plt.xlabel('Dataset')
+    plt.ylabel(metric_name)
+
+    for idx, (name, d) in enumerate({'SVM': result_svm, 'WOA': result_woa}.items()):
+        plt.bar(np.arange(len(d)) + idx * 0.2, [v[metric_index] for v in d.values()], width=0.2, label=name)
+
+    plt.xticks(np.arange(len(d)) + 0.1, d.keys())
+    plt.yticks(np.arange(0.80, 1.00, 0.01))
+    plt.ylim(0.80, 1.00)
+    plt.legend()
+
+    plt.show()
 
 if __name__ == '__main__':
     main()
